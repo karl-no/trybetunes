@@ -10,8 +10,6 @@ class Login extends React.Component {
     saveButtonDisabled: true,
   };
 
-  // this.saveButtonDisabled = this.saveButtonDisabled.bind(this);
-
   usernameInput = ({ target }) => {
     const { name, value } = target;
     this.setState({
