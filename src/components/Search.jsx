@@ -1,13 +1,16 @@
 import React from 'react';
-// import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
 import Header from './Header';
-
-// MIN_BAND_NAME_LENGTH = 2;
+import Loading from './Loading';
+import searchAlbumsAPI from '../services/searchAlbumsAPI';
 
 class Search extends React.Component {
   state = {
-    bandName: '',
+    artist: '',
     searchButtonDisabled: true,
+    searchBand: '',
+    albums: [],
+    loading: false,
   };
 
   searchBandButton = (event) => {
@@ -15,41 +18,90 @@ class Search extends React.Component {
     this.setState({
       [name]: value,
     }, () => {
-      const { bandName } = this.state;
-      if (bandName.length > 1) {
+      const { artist } = this.state;
+      if (artist.length > 1) {
         this.setState({ searchButtonDisabled: false });
       }
     });
   };
 
+  searchBand = () => {
+    const { artist } = this.state;
+    this.setState({ loading: true, searchBand: artist },
+      async () => {
+        const albums = await searchAlbumsAPI(artist);
+        this.setState({
+          albums,
+          artist: '',
+          loading: false,
+        });
+      });
+  }
+
   render() {
     const {
-      bandName,
+      artist,
       searchButtonDisabled,
+      searchBand,
+      albums,
+      loading,
     } = this.state;
 
     return (
       <div data-testid="page-search">
         <Header />
-        <form>
-          <input
-            id="inputSearchBand"
-            type="text"
-            name="bandName"
-            data-testid="search-artist-input"
-            placeholder="Banda ou artista"
-            value={ bandName }
-            onChange={ this.searchBandButton }
-          />
-          <button
-            id="buttonSearchBand"
-            type="submit"
-            data-testid="search-artist-button"
-            disabled={ searchButtonDisabled }
-          >
-            Pesquisar
-          </button>
-        </form>
+        {loading ? <Loading /> : (
+          <div>
+            <input
+              id="inputSearchBand"
+              type="text"
+              name="artist"
+              data-testid="search-artist-input"
+              placeholder="Banda ou artista"
+              value={ artist }
+              onChange={ this.searchBandButton }
+            />
+            <button
+              id="buttonSearchBand"
+              type="submit"
+              data-testid="search-artist-button"
+              disabled={ searchButtonDisabled }
+              onClick={ this.searchBand }
+            >
+              Pesquisar
+            </button>
+          </div>
+        )}
+        <div>
+          {!albums.length ? 'Nenhum álbum foi encontrado' : (
+            <div>
+              <p>{`Resultado de álbuns de: ${searchBand}`}</p>
+              {albums.map(({
+                artistName,
+                collectionId,
+                collectionName,
+                collectionPrice,
+                artworkUrl100,
+                releaseDate,
+                trackCount,
+              }) => (
+                <div key={ collectionId }>
+                  <img src={ artworkUrl100 } alt={ artistName } />
+                  <p><strong>{ artistName }</strong></p>
+                  <p>{ collectionPrice }</p>
+                  <p>{ releaseDate }</p>
+                  <p>{ trackCount }</p>
+                  <Link
+                    to={ `/album/${collectionId}` }
+                    data-testid={ `link-to-album-${collectionId}` }
+                  >
+                    {collectionName}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
