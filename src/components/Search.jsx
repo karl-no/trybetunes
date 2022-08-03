@@ -46,7 +46,6 @@ class Search extends React.Component {
       albums,
       loading,
     } = this.state;
-
     return (
       <div data-testid="page-search">
         <Header />
